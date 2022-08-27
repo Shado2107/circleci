@@ -1,34 +1,33 @@
-# CircleCI configuration file
-
 version: 2.1
-
 jobs:
   build:
     docker:
-      - image: node:11.10.1
-
-    working_directory: ~/repo
-
+      - image: circleci/node:16.14.2
     steps:
       - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
-
       - run: yarn install
-
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
-
-      # run tests!
-      - run: yarn test
-
       - run: yarn build
 
-      # - run: yarn netlify:deploy
+  lint:
+    docker:
+      - image: circleci/node:16.14.2
+    steps:
+      - checkout
+      - run: yarn install
+      - run: yarn lint
+
+  test:
+    docker:
+      - image: circleci/node:16.14.2
+    steps:
+      - checkout
+      - run: yarn install
+      - run: yarn test:unit
+
+workflows:
+  version: 2
+  integration:
+    jobs:
+      - build
+      - lint
+      - test
